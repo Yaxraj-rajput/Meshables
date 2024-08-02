@@ -1,6 +1,6 @@
 # Meshables
 
-Meshables is a marketplace designed for 3D assets and game development resources, providing developers with a comprehensive platform to access and purchase high-quality 3D models, textures, scripts, shaders, and sound effects.
+Meshables is a cutting-edge marketplace designed for 3D assets and game development resources, providing developers with a comprehensive platform to access and purchase high-quality 3D models, textures, scripts, shaders, and sound effects.
 
 ## Key Features
 
@@ -31,3 +31,15 @@ Meshables is a marketplace designed for 3D assets and game development resources
 - **AR/VR Ready**: Assets optimized for augmented reality and virtual reality environments.
 
 Meshables empowers developers to enhance their projects with professional-grade assets, streamlining the development process and elevating the overall gaming experience.
+
+## Try Meshables
+
+Ready to explore the marketplace? Click below to visit the Meshables website!
+
+[![Try Meshables](https://img.shields.io/badge/Try%20Meshables-1DA1F2?style=for-the-badge&logo=web&logoColor=white)](https://yaxraj-rajput.github.io/Meshables/)
+
+## Add Our Discord Bot
+
+Enhance your experience with real-time support and easy access to resources directly within your community.
+
+[![Add Discord Bot](https://img.shields.io/badge/Add%20Discord%20Bot-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1266460497859842241)
