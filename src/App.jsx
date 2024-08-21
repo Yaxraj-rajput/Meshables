@@ -20,6 +20,29 @@ import Scripts from "./Pages/Types/Scripts";
 import Shader from "./Pages/Types/Shaders";
 import HDRIs from "./Pages/Types/HDRIs";
 import Plugins from "./Pages/Types/Plugins";
+import Logout from "./Pages/Logout";
+
+export const AppRoutes = () => (
+  <Routes>
+    <Route path="/Login" element={<Login />} />
+    <Route path="/Logout" element={<Logout />} />
+    <Route path="/Profile/:id" element={<Profile />} />
+    <Route path="/" element={<Hot />} />
+    <Route path="/Trade" element={<Trade />} />
+    <Route path="/Cart" element={<Cart />} />
+    <Route path="/Hot" element={<Hot />} />
+    <Route path="/Models" element={<Models />} />
+    <Route path="/Printable" element={<Printables />} />
+    <Route path="/Textures" element={<Textures />} />
+    <Route path="/Scripts" element={<Scripts />} />
+    <Route path="/Shaders" element={<Shader />} />
+    <Route path="/HDRIs" element={<HDRIs />} />
+    <Route path="/Plugins" element={<Plugins />} />
+    <Route path="/View/:id" element={<View />} />
+    <Route path="/Upload" element={<Upload />} />
+    <Route path="/Checkout" element={<Checkout />} />
+  </Routes>
+);
 
 function App() {
   return (
@@ -27,24 +50,7 @@ function App() {
       <HashRouter>
         <Navbar />
         <FilterProvider>
-          <Routes>
-            <Route path="/Login" element={<Login />} />
-            <Route path="/Profile/:id" element={<Profile />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/Trade" element={<Trade />} />
-            <Route path="/Cart" element={<Cart />} />
-            <Route path="/Hot" element={<Hot />} />
-            <Route path="/Models" element={<Models />} />
-            <Route path="/Printable" element={<Printables />} />
-            <Route path="/Textures" element={<Textures />} />
-            <Route path="/Scripts" element={<Scripts />} />
-            <Route path="/Shaders" element={<Shader />} />
-            <Route path="/HDRIs" element={<HDRIs />} />
-            <Route path="/Plugins" element={<Plugins />} />
-            <Route path="/View/:id" element={<View />} />
-            <Route path="/Upload" element={<Upload />} />
-            <Route path="/Checkout" element={<Checkout />} />
-          </Routes>
+          <AppRoutes />
         </FilterProvider>
         <Footer />
       </HashRouter>

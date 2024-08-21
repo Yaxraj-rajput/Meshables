@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "../assets/Icons/logo.png";
 import { useUser } from "../Context/UserProvider";
-import Cart from "../Pages/Cart";
+import Search from "./Search";
 
 const Navbar = () => {
   const { currentUser } = useUser();
@@ -16,10 +16,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <div className="search">
-          <i className="icon fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Find more than 1000+ 3D models" />
-        </div>
+        <Search />
 
         <div className="right">
           <div className="nav_buttons">
@@ -32,18 +29,20 @@ const Navbar = () => {
             </Link>
 
             {currentUser ? (
-              <button className="signed_in">
-                <i className="icon fa-solid fa-user"></i>
-                <span className="username">
-                  {currentUser.displayName ? currentUser.displayName : "User"}
-                </span>
-              </button>
+              <Link to={`/Profile/${currentUser.uid}`}>
+                <button className="signed_in">
+                  <i className="icon fa-solid fa-user"></i>
+                  <span className="username">
+                    {currentUser.displayName ? currentUser.displayName : "User"}
+                  </span>
+                </button>
+              </Link>
             ) : (
               <>
                 <Link to="/Login">
                   <button>Sign In</button>
                 </Link>
-                <button className="primary">Sign Up</button>
+                {/* <button className="primary">Sign Up</button> */}
               </>
             )}
           </div>

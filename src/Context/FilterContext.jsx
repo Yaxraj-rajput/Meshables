@@ -1,5 +1,4 @@
-// FilterContext.js
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 const FilterContext = createContext();
 
@@ -12,12 +11,12 @@ export const FilterProvider = ({ children }) => {
     software: [],
   });
 
-  const updateFilters = (filterType, value) => {
+  const updateFilters = useCallback((filterType, value) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
       [filterType]: value,
     }));
-  };
+  }, []);
 
   return (
     <FilterContext.Provider value={{ filters, updateFilters }}>

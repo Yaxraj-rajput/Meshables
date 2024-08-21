@@ -1,7 +1,14 @@
 import React from "react";
 import { useUser } from "../Context/UserProvider";
 import { db } from "../../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageTitle from "../Components/UI/PageTitle";
@@ -11,6 +18,7 @@ import plus_icon from "../assets/Icons/plus.png";
 const Trade = () => {
   const { currentUser } = useUser();
   const [items, setItems] = useState([]);
+  const [tradeItems, setTradeItems] = useState([]);
   const location = useLocation();
   const { item } = location.state || {};
   const [tradeItemSelectedId, setTradeItemSelectedId] = useState(null);
@@ -39,11 +47,114 @@ const Trade = () => {
     fetchItems();
   }, [currentUser]);
 
+  useEffect(() => {
+    const fetchTradeItems = async () => {
+      try {
+        if (!currentUser) {
+          return;
+        }
+
+        const itemsQuery = query(collection(db, "Trades"));
+
+        const snapshot = await getDocs(itemsQuery);
+        const itemsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTradeItems(itemsData);
+      } catch (error) {
+        console.error("Error fetching trade items: ", error);
+      }
+    };
+
+    fetchTradeItems();
+  }, [currentUser]);
+
+  const placeTrade = async () => {
+    // Extract details of the asset we are trading with
+    const tradingWithUserId = item.userId;
+    const tradingWithUserAssetId = item.id;
+    const tradingWithUserAssetTitle = item.title;
+    const tradingWithUserAssetThumbnail = item.thumbnail;
+    const tradingWithUserAssetPrice = item.price;
+    const tradingWithUserAssetDiscount = item.discount;
+
+    // Extract details of our asset
+    const ourAsset = items.find((item) => item.id === tradeItemSelectedId);
+
+    if (!ourAsset) {
+      console.error("Selected trade item not found");
+      return;
+    }
+
+    const tradeData = {
+      tradingWithUserId,
+      tradingWithUserAssetId,
+      tradingWithUserAssetTitle,
+      tradingWithUserAssetThumbnail,
+      tradingWithUserAssetPrice,
+      tradingWithUserAssetDiscount,
+      ourUserId: currentUser.uid,
+      ourAssetId: ourAsset.id,
+      ourAssetTitle: ourAsset.title,
+      ourAssetThumbnail: ourAsset.thumbnail,
+      ourAssetPrice: ourAsset.price,
+      ourAssetDiscount: ourAsset.discount,
+    };
+
+    console.log(tradeData);
+
+    // Save the trade data to the "Trades" collection
+    const tradeRef = doc(
+      db,
+      "Trades",
+      `${currentUser.uid}_${tradingWithUserId}_${tradingWithUserAssetId}_${ourAsset.id}`
+    );
+
+    try {
+      await setDoc(tradeRef, tradeData);
+      console.log("Trade successfully placed");
+    } catch (error) {
+      console.error("Error placing trade: ", error);
+    }
+  };
+
   return (
     <>
       <div className="page_content">
         <PageTitle title="Trade" />
+
         <div className="trade_main">
+          {/* <div>
+            <div className="title">Items to be traded with me</div>
+
+            <div>
+              {tradeItems.map((item) => (
+                <div key={item.tradedAssetId} className="trade_item_card">
+                  <div className="card_image">
+                    <img
+                      src={item.trading_with_user_asset_thumbnail}
+                      alt={item.title}
+                    />
+                  </div>
+
+                  <div className="card_details">
+                    <h3 className="title">{item.title}</h3>
+
+                    <p className="price">
+                      {(
+                        item.price -
+                        (item.trading_with_user_asset_price *
+                          item.trading_with_user_asset_discount) /
+                          100
+                      ).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div> */}
+
           <div className="trade_frame">
             <div className="top">
               <div className="trading_for_item">
@@ -139,7 +250,9 @@ const Trade = () => {
             </div>
 
             <div className="bottom">
-              <button className="trade_button">Trade</button>
+              <button className="trade_button" onClick={placeTrade}>
+                Trade
+              </button>
             </div>
           </div>
 

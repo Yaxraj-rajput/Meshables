@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useUser } from "../Context/UserProvider";
 import ItemsListing from "../Components/ItemsListing";
+import { Helmet } from "react-helmet";
 
 const Profile = () => {
   const { id } = useParams();
@@ -73,75 +74,134 @@ const Profile = () => {
   }, [id]);
 
   return (
-    <div className="page_content">
-      <div className="profile_main">
-        <div className="profile">
-          <div className="top">
-            <div className="left">
-              <div className="profile_image">
-                <img
-                  src={
-                    user
-                      ? user.profilePic
-                      : "https://www.kindpng.com/picc/m/78-785827_user-profile-avatar-login-account"
-                  }
-                  alt={user ? user.username : "User"}
-                />
-              </div>
+    <>
+      <Helmet>
+        <title>{user ? user.username : "User"} | Meshables</title>
 
-              <div className="profile_details">
-                <div className="details">
-                  <h1 className="username">{user ? user.username : "User"}</h1>
-                  <span className="email">{user ? user.email : "Email"}</span>
-                  <span className="bio">{user ? user.bio : "Bio"}</span>
+        <meta
+          name="description"
+          content={`View ${
+            user ? user.username : "User"
+          }'s profile on Meshables`}
+        />
+
+        <meta
+          property="og:title"
+          content={`${user ? user.username : "User"} | Meshables`}
+        />
+        <meta
+          property="og:description"
+          content={`View ${
+            user ? user.username : "User"
+          }'s profile on Meshables`}
+        />
+        <meta
+          property="og:image"
+          content={
+            user
+              ? user.profilePic
+              : "https://www.kindpng.com/picc/m/78-785827_user-profile-avatar-login-account"
+          }
+        />
+        <meta
+          property="og:url"
+          content={`https://meshables.me/#/profile/${id}`}
+        />
+
+        <meta
+          name="twitter:title"
+          content={`${user ? user.username : "User"} | Meshables`}
+        />
+        <meta
+          name="twitter:description"
+          content={`View ${
+            user ? user.username : "User"
+          }'s profile on Meshables`}
+        />
+        <meta
+          name="twitter:image"
+          content={
+            user
+              ? user.profilePic
+              : "https://www.kindpng.com/picc/m/78-785827_user-profile-avatar-login-account"
+          }
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+
+        <link rel="canonical" href={`https://meshables.me/#/profile/${id}`} />
+      </Helmet>
+      <div className="page_content">
+        <div className="profile_main">
+          <div className="profile">
+            <div className="top">
+              <div className="left">
+                <div className="profile_image">
+                  <img
+                    src={
+                      user
+                        ? user.profilePic
+                        : "https://www.kindpng.com/picc/m/78-785827_user-profile-avatar-login-account"
+                    }
+                    alt={user ? user.username : "User"}
+                  />
                 </div>
-                <div className="rating">
-                  <div className="stars">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <i
-                        key={`filled_${i}`}
-                        className={`icon fas fa-star ${
-                          user &&
-                          typeof user.rating === "number" &&
-                          user.rating > i
-                            ? "filled"
-                            : ""
-                        }`}
-                      ></i>
-                    ))}
+
+                <div className="profile_details">
+                  <div className="details">
+                    <h1 className="username">
+                      {user ? user.username : "User"}
+                    </h1>
+                    <span className="email">{user ? user.email : "Email"}</span>
+                    <span className="bio">{user ? user.bio : "Bio"}</span>
                   </div>
+                  <div className="rating">
+                    <div className="stars">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <i
+                          key={`filled_${i}`}
+                          className={`icon fas fa-star ${
+                            user &&
+                            typeof user.rating === "number" &&
+                            user.rating > i
+                              ? "filled"
+                              : ""
+                          }`}
+                        ></i>
+                      ))}
+                    </div>
 
-                  <span className="rating_count">
-                    {user && typeof user.rating_count === "number"
-                      ? user.rating_count
-                      : 0}
-                  </span>
+                    <span className="rating_count">
+                      {user && typeof user.rating_count === "number"
+                        ? user.rating_count
+                        : 0}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="right">
-              <span className="follower_count">
-                {user && user.followers ? user.followers.length : 0} Followers
-              </span>
+              <div className="right">
+                <span className="follower_count">
+                  {user && user.followers ? user.followers.length : 0} Followers
+                </span>
 
-              <div className="actions">
-                <button className="follow_btn" onClick={followUser}>
-                  {isFollowing ? (
-                    <i className="icon fas fa-minus"></i>
-                  ) : (
-                    <i className="icon fas fa-plus"></i>
-                  )}
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </button>
+                <div className="actions">
+                  <button className="follow_btn" onClick={followUser}>
+                    {isFollowing ? (
+                      <i className="icon fas fa-minus"></i>
+                    ) : (
+                      <i className="icon fas fa-plus"></i>
+                    )}
+                    {isFollowing ? "Unfollow" : "Follow"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="bottom"></div>
-        <ItemsListing category="model" userId={user ? user.id : id} />
+          <div className="bottom"></div>
+          <ItemsListing category="model" userId={user ? user.id : id} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

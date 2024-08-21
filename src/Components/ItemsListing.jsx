@@ -75,6 +75,7 @@ const ItemsListing = (props) => {
           rating={5}
           rating_count={16}
           publisher={"kamlesh"}
+          type={asset_type}
         />
       ))}
     </div>

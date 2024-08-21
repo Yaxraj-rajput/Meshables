@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { useFilters } from "../Context/FilterContext";
 
 const ListingSidebar = () => {
@@ -9,6 +9,7 @@ const ListingSidebar = () => {
     "Office",
     "Sports",
     "Electronics",
+    "other",
   ];
 
   const softwares = [
@@ -22,36 +23,45 @@ const ListingSidebar = () => {
 
   const discounts = [10, 30, 50, 70, 90];
 
-  const [price, setPrice] = React.useState("");
+  const defaultPrice = 999999; // Set a high default price
+  const [price, setPrice] = React.useState(defaultPrice);
 
   const { filters, updateFilters } = useFilters();
+  const {
+    categories: filterCategories = [],
+    discounts: filterDiscounts = [],
+    softwares: filterSoftwares = [],
+  } = filters;
+
+  const updatePriceFilter = useCallback(() => {
+    updateFilters("price", price);
+  }, [price, updateFilters]);
+
+  useEffect(() => {
+    updatePriceFilter();
+  }, [price, updatePriceFilter]);
 
   const handleCategoryChange = (category, isChecked) => {
     const newCategories = isChecked
-      ? [...filters.categories, category]
-      : filters.categories.filter((c) => c !== category);
+      ? [...filterCategories, category]
+      : filterCategories.filter((c) => c !== category);
     updateFilters("categories", newCategories);
   };
 
-  // const handleSoftwareChange = (e) => {
-  //   const software = e.target.value;
-  //   const isChecked = e.target.checked;
-
-  //   const newSoftwares = isChecked
-  //     ? [...filters.softwares, software]
-  //     : filters.softwares.filter((s) => s !== software);
-  //   updateFilters("softwares", newSoftwares);
-  // };
   const handleDiscountChange = (discount, isChecked) => {
-    // Ensure filters.discounts is an array before attempting to modify it
-    const currentDiscounts = Array.isArray(filters.discounts)
-      ? filters.discounts
-      : [];
     const newDiscount = isChecked
-      ? [...currentDiscounts, discount] // Use the ensured array for spreading
-      : currentDiscounts.filter((d) => d !== discount); // Use the ensured array for filtering
+      ? [...filterDiscounts, discount]
+      : filterDiscounts.filter((d) => d !== discount);
     updateFilters("discounts", newDiscount);
   };
+
+  const handleSoftwareChange = (software, isChecked) => {
+    const newSoftwares = isChecked
+      ? [...filterSoftwares, software]
+      : filterSoftwares.filter((s) => s !== software);
+    updateFilters("softwares", newSoftwares);
+  };
+
   return (
     <div className="listing_sidebar">
       <form>
@@ -62,8 +72,10 @@ const ListingSidebar = () => {
             className="clr_btn"
             onClick={() => {
               updateFilters("categories", []);
-              updateFilters("price", 999999);
+              updateFilters("price", defaultPrice);
               updateFilters("softwares", []);
+              updateFilters("discounts", []);
+              setPrice(defaultPrice);
             }}
           >
             Clear filters
@@ -78,12 +90,12 @@ const ListingSidebar = () => {
           <div className="filter_options">
             <ul>
               {categories.map((category) => (
-                <li>
-                  <label key={category}>
+                <li key={category}>
+                  <label>
                     <input
                       type="checkbox"
                       value={category}
-                      checked={filters.categories.includes(category)}
+                      checked={filterCategories.includes(category)}
                       onChange={(e) =>
                         handleCategoryChange(category, e.target.checked)
                       }
@@ -107,16 +119,14 @@ const ListingSidebar = () => {
                 className="price_range"
                 type="range"
                 min={0}
-                max={100}
-                value={filters.price}
-                onChange={(e) => updateFilters("price", e.target.value)}
+                max={5000}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
               />
 
               <div className="range_values">
                 <span className="value">Free</span>
-                <span className="value">
-                  ${price === 100 ? "100+" : filters.price}
-                </span>
+                <span className="value">${price === 100 ? "100+" : price}</span>
               </div>
             </div>
           </div>
@@ -130,12 +140,11 @@ const ListingSidebar = () => {
             <ul>
               {discounts.map((discount) => (
                 <li key={discount}>
-                  {" "}
                   <label>
                     <input
                       type="checkbox"
                       value={discount}
-                      checked={filters.discounts?.includes(discount) || false} // Use optional chaining and default to false
+                      checked={filterDiscounts.includes(discount)}
                       onChange={(e) =>
                         handleDiscountChange(discount, e.target.checked)
                       }
@@ -148,7 +157,7 @@ const ListingSidebar = () => {
           </div>
         </div>
 
-        {/* <div className="filter_section">
+        <div className="filter_section">
           <div className="section_title">
             <h4>Software Compatibility</h4>
           </div>
@@ -156,13 +165,15 @@ const ListingSidebar = () => {
           <div className="filter_options">
             <ul>
               {softwares.map((software) => (
-                <li>
-                  <label key={software}>
+                <li key={software}>
+                  <label>
                     <input
                       type="checkbox"
                       value={software}
-                      checked={filters.softwares.includes(software)}
-                      onChange={handleSoftwareChange}
+                      checked={filterSoftwares.includes(software)}
+                      onChange={(e) =>
+                        handleSoftwareChange(software, e.target.checked)
+                      }
                     />
                     {software}
                   </label>
@@ -170,7 +181,7 @@ const ListingSidebar = () => {
               ))}
             </ul>
           </div>
-        </div> */}
+        </div>
       </form>
     </div>
   );

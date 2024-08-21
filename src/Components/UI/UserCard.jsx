@@ -14,7 +14,7 @@ const UserCard = ({ userId }) => {
         const userRef = doc(db, "Profiles", userId);
         const docSnap = await getDoc(userRef);
         if (docSnap.exists()) {
-          console.log("User data:", docSnap.data());
+          // console.log("User data:", docSnap.data());
           setUser(docSnap.data());
         } else {
           console.log("No such user!");

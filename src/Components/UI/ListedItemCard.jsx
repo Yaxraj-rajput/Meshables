@@ -5,7 +5,12 @@ const ListedItemCard = (props) => {
   return (
     <Link to={`/View/${props.id}`} className="item_card">
       <div className="item_card" key={props.id}>
-        <div className="card_image">
+        <div
+          className="card_image"
+          style={{
+            aspectRatio: props.type === "textures" ? "1 / 1" : undefined,
+          }}
+        >
           {props.discount > 0 ? (
             <div className="discount_card">
               <span>
