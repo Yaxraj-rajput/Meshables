@@ -37,7 +37,7 @@ const Trade = () => {
           where("userId", "==", currentUser.uid)
         );
       } else {
-        null;
+        return;
       }
 
       const snapshot = await getDocs(itemsQuery);
@@ -95,6 +95,11 @@ const Trade = () => {
   }, [currentUser]);
 
   const placeTrade = async () => {
+    if (!item || !item.userId || !item.id) {
+      console.error("Invalid item data");
+      return;
+    }
+
     const tradingWithUserId = item.userId;
     const tradingWithUserAssetId = item.id;
 
@@ -128,7 +133,7 @@ const Trade = () => {
     }
   };
 
-  const acceptTrade = async (tradeId, currentUser) => {
+  const acceptTrade = async (tradeId) => {
     const tradeRef = doc(db, "Trades", tradeId);
 
     try {
@@ -206,7 +211,7 @@ const Trade = () => {
                   <div
                     key={item.id}
                     className={`trade_item_card ${
-                      item.status == "accepted" && "accepted"
+                      item.status === "accepted" && "accepted"
                     }`}
                   >
                     <div className="left">
@@ -248,7 +253,7 @@ const Trade = () => {
                       </div>
                       <div className="card_details">
                         <h3 className="card_title">
-                          {item.ownAssetDetails?.title}
+                          {item.tradingWithUserAssetDetails?.title}
                         </h3>
                         <span className="type">
                           {item.tradingWithUserAssetDetails?.type}
