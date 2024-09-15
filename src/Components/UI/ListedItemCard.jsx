@@ -1,45 +1,52 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const ListedItemCard = (props) => {
+const ListedItemCard = ({ id, data, rating }) => {
   return (
-    <Link to={`/View/${props.id}`} className="item_card">
-      <div className="item_card" key={props.id}>
+    <Link to={`/View/${id}`}>
+      <div className="item_card" key={id}>
         <div
           className="card_image"
           style={{
-            aspectRatio: props.type === "textures" ? "1 / 1" : undefined,
+            aspectRatio: data.type === "textures" ? "1 / 1" : undefined,
           }}
         >
-          {props.discount > 0 ? (
+          {data.discount > 0 ? (
             <div className="discount_card">
               <span>
-                <strong>-{props.discount}%</strong>
+                <strong>-{data.discount}%</strong>
               </span>
             </div>
           ) : null}
-          <img src={props.image} alt="placeholder" />
+          <img src={data.thumbnail} alt="placeholder" />
         </div>
 
         <div className="card_content">
           <span className="title">
-            {props.title}{" "}
-            <span className="publisher">by {props.publisher}</span>
+            {data.title}{" "}
+            <span className="publisher">by Servant {data.publisher}</span>
           </span>
           <div className="details">
             <span className="price">
-              <strong>{props.price == 0 ? "Free" : `$${props.price}`}</strong>
+              <strong>
+                {data.price - (data.price * data.discount) / 100 === 0
+                  ? "Free"
+                  : `$${(
+                      data.price -
+                      (data.price * data.discount) / 100
+                    ).toFixed(2)}`}
+              </strong>
             </span>
             <span className="rating">
               <div className="icons">
-                {Array.from({ length: props.rating }, (_, i) => (
+                {Array.from({ length: rating }, (_, i) => (
                   <i key={`filled_${i}`} className="icon fas fa-star"></i> // Added unique key here
                 ))}
-                {Array.from({ length: 5 - props.rating }, (_, i) => (
+                {Array.from({ length: 5 - rating }, (_, i) => (
                   <i key={`unfilled_${i}`} className="icon far fa-star"></i> // And here
                 ))}
               </div>
-              <span className="rating_count">{props.rating_count}</span>
+              <span className="rating_count">125</span>
             </span>
           </div>
           {/* <button className="add_to_cart_btn">

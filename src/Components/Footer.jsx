@@ -65,7 +65,7 @@ const Footer = () => {
 
           <div className="link_group">
             <div className="title">
-              <span>Sell assets</span>
+              <span>Sell</span>
             </div>
             <div className="links">
               <ul>

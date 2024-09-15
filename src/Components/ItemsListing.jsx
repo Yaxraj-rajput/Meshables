@@ -3,10 +3,12 @@ import ListedItemCard from "./UI/ListedItemCard";
 import { db } from "../../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useFilters } from "../Context/FilterContext";
+import { Link } from "react-router-dom";
 
 const ItemsListing = (props) => {
   const [items, setItems] = useState([]);
   const filters = useFilters().filters;
+  const [loading, setLoading] = useState(true);
   // console.log(filters);
 
   let asset_type = props.category ? props.category : "models";
@@ -36,6 +38,8 @@ const ItemsListing = (props) => {
         ...doc.data(),
       }));
       setItems(itemsData);
+      itemsData && setLoading(false);
+      itemsData.length === 0 && setLoading("no_item");
     };
 
     fetchItems();
@@ -64,19 +68,18 @@ const ItemsListing = (props) => {
   });
   return (
     <div className="item_listing">
+      {loading == true ? <div className="loading">Loading...</div> : null}
+      {loading === "no_item" && (
+        <div className="no_items">
+          <span>It's so empty here. How about you fill it up💦</span>
+          <Link to="/upload">
+            <button>Upload</button>
+          </Link>
+        </div>
+      )}
+
       {filteredItems.map((item) => (
-        <ListedItemCard
-          key={item.id}
-          id={item.id}
-          title={item.title}
-          image={item.thumbnail}
-          discount={item.discount}
-          price={(item.price - (item.price * item.discount) / 100).toFixed(2)}
-          rating={5}
-          rating_count={16}
-          publisher={"kamlesh"}
-          type={asset_type}
-        />
+        <ListedItemCard key={item.id} id={item.id} data={item} rating="5" />
       ))}
     </div>
   );

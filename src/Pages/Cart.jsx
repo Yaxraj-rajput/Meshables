@@ -5,13 +5,41 @@ import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useUser } from "../Context/UserProvider";
 
 const Cart = () => {
-  const { currentUser, userProfile, updateUserProfile } = useUser();
+  const { currentUser, updateUserProfile } = useUser();
   const Firestore = getFirestore();
 
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
+
+  const connectKeplr = async () => {
+    if (!window.keplr) {
+      alert("Please install Keplr extension");
+      return;
+    }
+
+    try {
+      // Enable Keplr.
+      await window.keplr.enable("cosmoshub-4");
+
+      // Get the offline signer.
+      const offlineSigner = window.getOfflineSigner("cosmoshub-4");
+
+      // Get the user's address.
+      const accounts = await offlineSigner.getAccounts();
+      const address = accounts[0].address;
+      console.log("Keplr address:", address);
+
+      // Confirm connection
+      console.log("Keplr successfully connected.");
+    } catch (err) {
+      console.error("Keplr connection failed:", err);
+      alert(
+        "Failed to connect to Keplr. Please ensure the wallet is installed and try again."
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchCartItems = () => {
@@ -53,44 +81,133 @@ const Cart = () => {
     const purchasedItems = cartItems.map((item) => item.id);
     console.log("Purchased items:", purchasedItems);
 
-    if (currentUser) {
-      const userProfileRef = doc(Firestore, "Profiles", currentUser.uid);
+    if (!window.keplr) {
+      alert("Please install Keplr extension");
+      return;
+    }
 
-      try {
-        const userProfileSnap = await getDoc(userProfileRef);
+    try {
+      // Enable Keplr.
+      await window.keplr.enable("cosmoshub-4");
 
-        if (userProfileSnap.exists()) {
-          const existingPurchasedItems =
-            userProfileSnap.data().purchasedItems || [];
-          const updatedPurchasedItems = [
-            ...new Set([...existingPurchasedItems, ...purchasedItems]),
-          ];
+      // Get the offline signer.
+      const offlineSigner = window.getOfflineSigner("cosmoshub-4");
 
-          await updateDoc(userProfileRef, {
-            purchasedItems: updatedPurchasedItems,
-          });
-          console.log(
-            "Purchased items added to Firestore:",
-            updatedPurchasedItems
-          );
+      // Get the user's address.
+      const accounts = await offlineSigner.getAccounts();
+      const address = accounts[0].address;
 
-          updateUserProfile({ purchasedItems: updatedPurchasedItems });
+      // Calculate the total amount in uatom (1 atom = 1,000,000 uatom)
+      const totalAmount = (calculateTotal() * 1000000).toString();
 
-          localStorage.removeItem("cart");
-          setCartItems([]);
+      // Create the transaction message
+      const msgSend = {
+        type: "cosmos-sdk/MsgSend",
+        value: {
+          from_address: address,
+          to_address: "recipient_address_here", // address
+          amount: [
+            {
+              denom: "uatom",
+              amount: totalAmount / 4.23,
+            },
+          ],
+        },
+      };
 
-          alert("Items purchased successfully!");
-        } else {
-          console.error("User profile document does not exist!");
-        }
-      } catch (error) {
-        console.error(
-          "Error adding purchased items to the user's profile",
-          error
+      // Get the account sequence and account number
+      const accountInfo = await window.keplr.getKey("cosmoshub-4");
+      const sequence = accountInfo.sequence;
+      const accountNumber = accountInfo.accountNumber;
+
+      // Create the transaction
+      const tx = {
+        msg: [msgSend],
+        fee: {
+          amount: [
+            {
+              denom: "uatom",
+              amount: "5000", // Fee amount in uatom
+            },
+          ],
+          gas: "200000", // Gas limit
+        },
+        signatures: null,
+        memo: "Purchase from Meshables",
+      };
+
+      // Sign the transaction
+      const signDoc = {
+        chain_id: "cosmoshub-4",
+        account_number: accountNumber,
+        sequence: sequence,
+        fee: tx.fee,
+        msgs: tx.msg,
+        memo: tx.memo,
+      };
+
+      const { signed, signature } = await window.keplr.signAmino(
+        "cosmoshub-4",
+        address,
+        signDoc
+      );
+
+      // Add the signature to the transaction
+      tx.signatures = [signature];
+
+      // Broadcast the transaction
+      const result = await window.keplr.sendTx("cosmoshub-4", tx, "sync");
+
+      if (result.code !== undefined && result.code !== 0) {
+        throw new Error(
+          `Failed to send transaction: ${result.log || result.raw_log}`
         );
       }
-    } else {
-      console.error("No current user found!");
+
+      console.log("Transaction successful:", result);
+
+      if (currentUser) {
+        const userProfileRef = doc(Firestore, "Profiles", currentUser.uid);
+
+        try {
+          const userProfileSnap = await getDoc(userProfileRef);
+
+          if (userProfileSnap.exists()) {
+            const existingPurchasedItems =
+              userProfileSnap.data().purchasedItems || [];
+            const updatedPurchasedItems = [
+              ...new Set([...existingPurchasedItems, ...purchasedItems]),
+            ];
+
+            await updateDoc(userProfileRef, {
+              purchasedItems: updatedPurchasedItems,
+            });
+            console.log(
+              "Purchased items added to Firestore:",
+              updatedPurchasedItems
+            );
+
+            updateUserProfile({ purchasedItems: updatedPurchasedItems });
+
+            localStorage.removeItem("cart");
+            setCartItems([]);
+
+            alert("Items purchased successfully!");
+          } else {
+            console.error("User profile document does not exist!");
+          }
+        } catch (error) {
+          console.error(
+            "Error adding purchased items to the user's profile",
+            error
+          );
+        }
+      } else {
+        console.error("No current user found!");
+      }
+    } catch (err) {
+      console.error("Keplr transaction failed:", err);
+      alert("Failed to complete the transaction. Please try again.");
     }
   };
 
@@ -149,27 +266,19 @@ const Cart = () => {
                 Total: <span className="value">${calculateTotal()}</span>
               </div>
 
-              <div className="accepted_method_icons">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Paypal_2014_logo.png"
-                  alt="paypal"
-                />
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
-                  alt="visa"
-                />
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
-                  alt="mastercard"
-                />
-                <img
-                  src="https://cdn1.iconfinder.com/data/icons/logos-brands-in-colors/436/Google_Pay_GPay_Logo-512.png"
-                  alt="Gpay"
-                />
-              </div>
-
               <div className="checkout">
-                <button onClick={checkout}>Checkout</button>
+                <button className="connect" onClick={connectKeplr}>
+                  Connect Wallet
+                </button>
+                <button
+                  onClick={() => {
+                    currentUser
+                      ? checkout()
+                      : alert("Please sign in to checkout.");
+                  }}
+                >
+                  Checkout
+                </button>
               </div>
             </>
           ) : (

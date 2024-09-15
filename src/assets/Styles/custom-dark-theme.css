@@ -1,0 +1,18 @@
+.mce-content-body {
+  background-color: #2e2e2e; /* Dark grey background */
+  color: #d3d3d3; /* Light grey text */
+}
+
+.mce-toolbar,
+.mce-menubar {
+  background-color: #3a3a3a; /* Slightly lighter grey for toolbar and menubar */
+}
+
+.mce-btn {
+  background-color: #4a4a4a; /* Button background */
+  color: #d3d3d3; /* Button text */
+}
+
+.mce-btn:hover {
+  background-color: #5a5a5a; /* Button hover background */
+}

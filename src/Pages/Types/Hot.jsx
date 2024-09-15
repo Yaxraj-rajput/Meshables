@@ -32,7 +32,7 @@ const Hot = () => {
       </Helmet>
       <div className="page_content">
         <PageTitle title="Hot" />
-        <CategoryGrid />
+        {/* <CategoryGrid /> */}
         <div className="listing_section">
           {/* <ListingSidebar /> */}
           <ItemsListing />

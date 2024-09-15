@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from "react";
 import { useFilters } from "../Context/FilterContext";
+import checkmark from "../assets/Icons/check_mark.png";
 
 const ListingSidebar = () => {
   const categories = [
@@ -23,7 +24,7 @@ const ListingSidebar = () => {
 
   const discounts = [10, 30, 50, 70, 90];
 
-  const defaultPrice = 999999; // Set a high default price
+  const defaultPrice = 1000; // Set a high default price
   const [price, setPrice] = React.useState(defaultPrice);
 
   const { filters, updateFilters } = useFilters();
@@ -91,16 +92,23 @@ const ListingSidebar = () => {
             <ul>
               {categories.map((category) => (
                 <li key={category}>
-                  <label>
+                  <label
+                    className={
+                      filterCategories.includes(category) ? "active" : ""
+                    }
+                  >
                     <input
                       type="checkbox"
                       value={category}
                       checked={filterCategories.includes(category)}
-                      onChange={(e) =>
-                        handleCategoryChange(category, e.target.checked)
+                      onChange={(event) =>
+                        handleCategoryChange(category, event.target.checked)
                       }
                     />
                     {category}
+                    {filterCategories.includes(category) && (
+                      <img className="checkmark" src={checkmark} alt="" />
+                    )}
                   </label>
                 </li>
               ))}
@@ -119,14 +127,14 @@ const ListingSidebar = () => {
                 className="price_range"
                 type="range"
                 min={0}
-                max={5000}
+                max={1000}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
 
               <div className="range_values">
                 <span className="value">Free</span>
-                <span className="value">${price === 100 ? "100+" : price}</span>
+                <span className="value">${price > 999 ? "999+" : price}</span>
               </div>
             </div>
           </div>

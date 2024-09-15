@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "../Context/UserProvider";
 import { db } from "../../firebase";
 import {
@@ -8,8 +8,11 @@ import {
   where,
   doc,
   setDoc,
+  getDoc,
+  deleteDoc,
+  writeBatch,
+  arrayUnion,
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import PageTitle from "../Components/UI/PageTitle";
 import exchange_icon from "../assets/Icons/exchange.png";
@@ -22,6 +25,7 @@ const Trade = () => {
   const location = useLocation();
   const { item } = location.state || {};
   const [tradeItemSelectedId, setTradeItemSelectedId] = useState(null);
+  const [isTradeRequestsOpen, setIsTradeRequestsOpen] = useState(false);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -33,7 +37,7 @@ const Trade = () => {
           where("userId", "==", currentUser.uid)
         );
       } else {
-        itemsQuery = query(collection(db, "Assets"));
+        null;
       }
 
       const snapshot = await getDocs(itemsQuery);
@@ -54,14 +58,34 @@ const Trade = () => {
           return;
         }
 
-        const itemsQuery = query(collection(db, "Trades"));
+        const itemsQuery = query(
+          collection(db, "Trades"),
+          where("tradingWithUserId", "==", currentUser.uid)
+        );
 
         const snapshot = await getDocs(itemsQuery);
         const itemsData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setTradeItems(itemsData);
+
+        const assetDetailsPromises = itemsData.map(async (item) => {
+          const ownAssetDoc = await getDoc(doc(db, "Assets", item.ownAssetId));
+          const tradingWithUserAssetDoc = await getDoc(
+            doc(db, "Assets", item.tradingWithUserAssetId)
+          );
+
+          return {
+            ...item,
+            ownAssetDetails: ownAssetDoc.exists() ? ownAssetDoc.data() : null,
+            tradingWithUserAssetDetails: tradingWithUserAssetDoc.exists()
+              ? tradingWithUserAssetDoc.data()
+              : null,
+          };
+        });
+
+        const itemsWithAssetDetails = await Promise.all(assetDetailsPromises);
+        setTradeItems(itemsWithAssetDetails);
       } catch (error) {
         console.error("Error fetching trade items: ", error);
       }
@@ -71,15 +95,9 @@ const Trade = () => {
   }, [currentUser]);
 
   const placeTrade = async () => {
-    // Extract details of the asset we are trading with
     const tradingWithUserId = item.userId;
     const tradingWithUserAssetId = item.id;
-    const tradingWithUserAssetTitle = item.title;
-    const tradingWithUserAssetThumbnail = item.thumbnail;
-    const tradingWithUserAssetPrice = item.price;
-    const tradingWithUserAssetDiscount = item.discount;
 
-    // Extract details of our asset
     const ourAsset = items.find((item) => item.id === tradeItemSelectedId);
 
     if (!ourAsset) {
@@ -90,21 +108,12 @@ const Trade = () => {
     const tradeData = {
       tradingWithUserId,
       tradingWithUserAssetId,
-      tradingWithUserAssetTitle,
-      tradingWithUserAssetThumbnail,
-      tradingWithUserAssetPrice,
-      tradingWithUserAssetDiscount,
-      ourUserId: currentUser.uid,
-      ourAssetId: ourAsset.id,
-      ourAssetTitle: ourAsset.title,
-      ourAssetThumbnail: ourAsset.thumbnail,
-      ourAssetPrice: ourAsset.price,
-      ourAssetDiscount: ourAsset.discount,
+      ownUserId: currentUser.uid,
+      ownAssetId: ourAsset.id,
     };
 
     console.log(tradeData);
 
-    // Save the trade data to the "Trades" collection
     const tradeRef = doc(
       db,
       "Trades",
@@ -119,42 +128,165 @@ const Trade = () => {
     }
   };
 
+  const acceptTrade = async (tradeId, currentUser) => {
+    const tradeRef = doc(db, "Trades", tradeId);
+
+    try {
+      const batch = writeBatch(db);
+
+      batch.update(tradeRef, { status: "accepted" });
+
+      const trade = await getDoc(tradeRef);
+      const tradeData = trade.data();
+
+      const assetRef = doc(db, "Assets", tradeData.ownAssetId);
+      const assetDoc = await getDoc(assetRef);
+      const assetData = assetDoc.data();
+
+      const userRef = doc(db, "Profiles", tradeData.tradingWithUserId);
+      const myUserRef = doc(db, "Profiles", tradeData.ownUserId);
+
+      batch.update(userRef, {
+        purchasedItems: arrayUnion(tradeData.ownAssetId),
+      });
+
+      batch.update(myUserRef, {
+        purchasedItems: arrayUnion(tradeData.tradingWithUserAssetId),
+      });
+
+      await batch.commit();
+
+      setTradeItems((prevTradeItems) =>
+        prevTradeItems.map((item) =>
+          item.id === tradeId ? { ...item, status: "accepted" } : item
+        )
+      );
+
+      console.log("Trade accepted successfully");
+    } catch (error) {
+      console.error("Error accepting trade: ", error);
+    }
+  };
+
+  const rejectTrade = async (tradeId) => {
+    const tradeRef = doc(db, "Trades", tradeId);
+
+    try {
+      await deleteDoc(tradeRef);
+      console.log("Trade rejected successfully");
+      setTradeItems((prevTradeItems) =>
+        prevTradeItems.filter((item) => item.id !== tradeId)
+      );
+    } catch (error) {
+      console.error("Error rejecting trade: ", error);
+    }
+  };
+
   return (
     <>
       <div className="page_content">
-        <PageTitle title="Trade" />
-
         <div className="trade_main">
-          {/* <div>
-            <div className="title">Items to be traded with me</div>
+          <div className="title">
+            <PageTitle title="Trade" />
+            <button
+              className="toggle_requests"
+              onClick={() => setIsTradeRequestsOpen((prev) => !prev)}
+            >
+              <i className="icon fa-solid fa-exchange"></i> Trade Requests
+            </button>
+          </div>
+          {isTradeRequestsOpen && (
+            <div className="my_trades">
+              <div className="title">
+                <h2>Trade requests</h2>
+              </div>
 
-            <div>
-              {tradeItems.map((item) => (
-                <div key={item.tradedAssetId} className="trade_item_card">
-                  <div className="card_image">
-                    <img
-                      src={item.trading_with_user_asset_thumbnail}
-                      alt={item.title}
-                    />
+              <div className="items">
+                {tradeItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`trade_item_card ${
+                      item.status == "accepted" && "accepted"
+                    }`}
+                  >
+                    <div className="left">
+                      <div className="card_image">
+                        <img
+                          src={item.ownAssetDetails?.thumbnail}
+                          alt={item.ownAssetDetails?.title}
+                        />
+                      </div>
+                      <div className="card_details">
+                        <h3 className="card_title">
+                          {item.ownAssetDetails?.title}
+                        </h3>
+                        <span className="type">
+                          {item.ownAssetDetails?.type}
+                        </span>
+                        <span className="price">
+                          $
+                          {(
+                            item.ownAssetDetails?.price -
+                            (item.ownAssetDetails?.price *
+                              item.ownAssetDetails?.discount) /
+                              100
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="trade_icon">
+                      <img src={exchange_icon} alt="Trade" />
+                    </div>
+
+                    <div className="right">
+                      <div className="card_image">
+                        <img
+                          src={item.tradingWithUserAssetDetails?.thumbnail}
+                          alt={item.tradingWithUserAssetDetails?.title}
+                        />
+                      </div>
+                      <div className="card_details">
+                        <h3 className="card_title">
+                          {item.ownAssetDetails?.title}
+                        </h3>
+                        <span className="type">
+                          {item.tradingWithUserAssetDetails?.type}
+                        </span>
+                        <span className="price">
+                          $
+                          {(
+                            item.tradingWithUserAssetDetails?.price -
+                            (item.tradingWithUserAssetDetails?.price *
+                              item.tradingWithUserAssetDetails?.discount) /
+                              100
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {item.status !== "accepted" && (
+                      <div className="buttons">
+                        <button
+                          className="button reject_trade"
+                          onClick={() => rejectTrade(item.id)}
+                        >
+                          <i className="icon fa-solid fa-times"></i>
+                        </button>
+
+                        <button
+                          className="button accept_trade"
+                          onClick={() => acceptTrade(item.id)}
+                        >
+                          <i className="icon fa-solid fa-check"></i>
+                        </button>
+                      </div>
+                    )}
                   </div>
-
-                  <div className="card_details">
-                    <h3 className="title">{item.title}</h3>
-
-                    <p className="price">
-                      {(
-                        item.price -
-                        (item.trading_with_user_asset_price *
-                          item.trading_with_user_asset_discount) /
-                          100
-                      ).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div> */}
-
+          )}
           <div className="trade_frame">
             <div className="top">
               <div className="trading_for_item">
@@ -186,20 +318,6 @@ const Trade = () => {
 
               <div className="my_trade_item">
                 <div className="my_trade_item_container">
-                  {/* {tradeItemSelectedId &&
-              items.map((item) => (
-                <div key={item.id} className="my_trade_item_card">
-                  <img src={item.thumbnail} alt={item.title} />
-                  <h3>{item.title}</h3>
-
-                  <p>
-                    {(item.price - (item.price * item.discount) / 100).toFixed(
-                      2
-                    )}
-                  </p>
-                </div>
-              ))} */}
-
                   {tradeItemSelectedId &&
                     items.filter((item) => item.id === tradeItemSelectedId)
                       .length > 0 && (
