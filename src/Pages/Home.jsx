@@ -17,7 +17,7 @@ const Home = () => {
       <div className="hero_div_main">
         <div className="hero_text">
           <h1>
-            <span className="part1">Now on</span> Apple Vision Pro
+            India's biggest digital asset <br /> marketplace.
           </h1>
           <p>Coz who needs talent when you can just download it.</p>
           <Link to="/hot">

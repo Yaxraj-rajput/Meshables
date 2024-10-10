@@ -8,6 +8,12 @@ import { useLocation } from "react-router-dom";
 const Navbar = () => {
   const { currentUser } = useUser();
 
+  const cart = JSON.parse(localStorage.getItem("cart"));
+
+  if (cart) {
+    var cartCount = cart.length;
+  }
+
   const currentPage = useLocation().pathname;
 
   return (
@@ -29,6 +35,9 @@ const Navbar = () => {
             <Link to="/Cart">
               <button>
                 <i className="icon fa-solid fa-shopping-cart"></i>
+                {cartCount ? (
+                  <span className="cart_count">{cartCount}</span>
+                ) : null}
               </button>
             </Link>
 

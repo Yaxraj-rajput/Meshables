@@ -23,6 +23,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@google/model-viewer": "^3.5.0",
+    "@stripe/stripe-js": "^4.8.0",
     "@taquito/beacon-wallet": "^20.0.1",
     "@taquito/signer": "^20.0.1",
     "@taquito/taquito": "^20.0.1",
@@ -39,6 +40,7 @@
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.24.1",
     "react-syntax-highlighter": "^15.5.0",
+    "stripe": "^17.2.0",
     "three": "^0.163.0",
     "tinymce": "^7.3.0"
   },

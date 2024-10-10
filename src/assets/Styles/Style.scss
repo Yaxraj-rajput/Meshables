@@ -43,7 +43,7 @@ a {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1000;
 
   .logo {
     width: 20%;
@@ -264,6 +264,21 @@ a {
         transition: all 0.3s ease;
         opacity: 0.8;
         position: relative;
+
+        .cart_count {
+          position: absolute;
+          top: 0;
+          right: 0;
+          background-color: $primary-button;
+          color: $primary-text;
+          font-size: 0.5rem;
+          font-weight: 600;
+          display: grid;
+          place-items: center;
+          width: 1rem;
+          height: 1rem;
+          border-radius: 50%;
+        }
 
         &.login_btn {
           background-color: $primary-background;
@@ -500,6 +515,7 @@ a {
         font-weight: 600;
         color: $primary-text;
         z-index: 1;
+        text-align: center;
       }
 
       p {
@@ -507,6 +523,7 @@ a {
         font-weight: 500;
         color: $primary-text;
         opacity: 0.6;
+        text-align: center;
       }
 
       button {
@@ -705,6 +722,14 @@ a {
         border-radius: 0.8rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
+        background: rgb(24, 24, 24);
+        background: linear-gradient(
+            93deg,
+            rgba(24, 24, 24, 1) 29%,
+            rgba(0, 30, 0, 0) 100%
+          ),
+          url("../Images/Sections/banner.jpg");
+
         .details {
           width: 60%;
           display: flex;
@@ -883,12 +908,15 @@ a {
         padding: 2rem;
         margin-top: 8rem;
         align-items: flex-start;
+
         h1 {
           font-size: 2rem;
+          text-align: left;
         }
 
         p {
           font-size: 0.9rem;
+          text-align: left;
         }
 
         button {
@@ -961,6 +989,7 @@ a {
 
     .what_we_provide {
       padding: 0rem 2rem;
+      width: 100%;
       .title {
         h1 {
           font-size: 2rem;
@@ -973,7 +1002,9 @@ a {
         .top {
           flex-direction: column;
           gap: 1rem;
-          padding: 1rem;
+          padding: 2rem;
+          height: 50vh;
+
           .details {
             width: 100%;
             .title {
@@ -1001,11 +1032,35 @@ a {
         .bottom {
           flex-direction: column;
           gap: 1rem;
+          width: 100%;
           .card {
             width: 100%;
+            justify-content: flex-end;
+            padding: 0;
+            &:hover {
+              width: 100%;
+            }
+
             .details {
+              justify-content: flex-end;
+              align-items: flex-start;
+              opacity: 1;
+              filter: blur(0rem);
+              margin: 0;
+              width: 100%;
+              height: 8rem;
+              transform: scale(1);
+              padding: 0.7rem;
+              background: rgb(24, 24, 24);
+              background: linear-gradient(
+                357deg,
+                rgba(24, 24, 24, 1) 29%,
+                rgba(0, 30, 0, 0) 100%
+              );
+
               h2 {
-                font-size: 1.2rem;
+                font-size: 1rem;
+                text-align: left;
               }
 
               button {
@@ -1396,6 +1451,8 @@ a {
   padding: 0rem 8rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+
   padding-bottom: 5rem;
   min-height: 50vh;
 
@@ -2433,13 +2490,50 @@ a {
 
           .model_viewer {
             width: 100%;
-            aspect-ratio: 1 / 1;
             border-radius: 0.5rem;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: $secondary-background;
+            position: relative;
+            aspect-ratio: 1 / 1;
+
+            .loading {
+              position: absolute;
+              font-size: 1.5rem;
+              font-weight: 600;
+              color: $primary-text;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              display: flex;
+              gap: 1rem;
+
+              span {
+                font-size: 0.9rem;
+                font-weight: 500;
+                color: $primary-text;
+              }
+
+              .spinner {
+                aspect-ratio: 1 / 1;
+                width: 2rem;
+                border-radius: 50%;
+                border: 2px solid #ffffff;
+                border-top: 2px solid $primary-button;
+                animation: spin 1s linear infinite;
+
+                @keyframes spin {
+                  0% {
+                    transform: rotate(0deg);
+                  }
+                  100% {
+                    transform: rotate(360deg);
+                  }
+                }
+              }
+            }
 
             .model {
               width: 100%;
@@ -2942,6 +3036,7 @@ a {
   justify-content: center;
   gap: 2rem;
   padding-top: 3rem;
+  width: 100%;
 
   .tabs {
     width: 100%;
@@ -3453,6 +3548,427 @@ a {
   }
 }
 
+.checkout_main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+  width: 80%;
+  padding: 1rem;
+  padding-top: 3rem;
+
+  .title {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #ffffff1f;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: $primary-text;
+    }
+  }
+
+  .container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem;
+
+    .left {
+      width: 65%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        width: 100%;
+        padding: 1rem;
+
+        .section_title {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: $primary-text;
+        }
+
+        .section {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          align-items: flex-start;
+          justify-content: flex-start;
+
+          .group {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            align-items: flex-start;
+            justify-content: space-between;
+          }
+
+          .input_field {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            width: 100%;
+
+            label {
+              font-size: 0.9rem;
+              font-weight: 500;
+              color: $primary-text;
+              opacity: 0.6;
+            }
+
+            input {
+              width: 100%;
+              padding: 1rem;
+              border-radius: 0.5rem;
+              border: 1px solid #ffffff1f;
+              background-color: $secondary-background;
+              color: $primary-text;
+              font-size: 1rem;
+              font-weight: 500;
+              transition: all 0.3s ease;
+              outline: none;
+
+              &:focus {
+                border: 1px solid #ffffff33;
+              }
+            }
+
+            .card_input {
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: space-between;
+
+              width: 100%;
+              padding: 0.6rem;
+              padding-left: 1rem;
+              border-radius: 0.5rem;
+              border: 1px solid #ffffff1f;
+              background-color: $secondary-background;
+              color: $primary-text;
+              font-size: 1rem;
+              font-weight: 500;
+              transition: all 0.3s ease;
+              outline: none;
+
+              input {
+                margin: 0;
+                padding: 0;
+                border: none;
+                background-color: transparent;
+                color: $primary-text;
+                font-size: 1rem;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                outline: none;
+                width: 100%;
+                border-radius: 0;
+              }
+
+              .card_icon {
+                width: 2rem;
+                height: 2rem;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                }
+              }
+            }
+
+            select {
+              width: 100%;
+              padding: 1rem;
+              border-radius: 0.5rem;
+              border: 1px solid #ffffff1f;
+              background-color: $secondary-background;
+              color: darken($color: $primary-text, $amount: 30);
+
+              font-size: 1rem;
+              font-weight: 500;
+              transition: all 0.3s ease;
+              outline: none;
+
+              // dropdown icon styling
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              appearance: none;
+              background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+              background-repeat: no-repeat;
+              background-position: right 0.7rem top 50%, 0 0;
+              background-size: 1.5rem auto;
+              padding-right: 3rem;
+
+              &:focus {
+                border: 1px solid #ffffff33;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .right {
+      width: 35%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100%;
+      background-color: $secondary-background;
+      border-radius: 0.5rem;
+      position: sticky;
+      top: 9rem;
+
+      .order_items {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        padding: 1rem;
+
+        .section_title {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: $primary-text;
+        }
+
+        .items {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          width: 100%;
+
+          .item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 1rem;
+            background-color: $secondary-background;
+            padding: 1rem;
+            width: 100%;
+            border-radius: 0.5rem;
+
+            .image {
+              width: 4rem;
+              height: 4rem;
+              border-radius: 0.5rem;
+              overflow: hidden;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+
+              img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              }
+            }
+
+            .item_details {
+              display: flex;
+              flex-direction: column;
+              gap: 0.5rem;
+              align-items: flex-start;
+              justify-content: flex-start;
+
+              .item_title {
+                font-size: 1rem;
+                font-weight: 600;
+                color: $primary-text;
+              }
+
+              .price {
+                font-size: 0.9rem;
+                font-weight: 500;
+                color: $primary-text;
+                opacity: 0.6;
+              }
+            }
+          }
+        }
+      }
+
+      .total {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+
+        .title {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: $primary-text;
+        }
+
+        .item {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          padding: 1rem;
+          border-radius: 0.5rem;
+          color: $primary-text;
+          font-size: 1rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          gap: 1rem;
+
+          .label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: $primary-text;
+          }
+
+          .value {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: $primary-text;
+            opacity: 0.6;
+          }
+        }
+
+        .total_payable {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          padding: 1rem;
+          border-radius: 0.5rem;
+          color: $primary-text;
+          font-size: 1rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          gap: 1rem;
+          border-top: 1px solid #ffffff1f;
+
+          .label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: $primary-text;
+          }
+
+          .value {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: $primary-text;
+            opacity: 0.6;
+          }
+        }
+      }
+
+      .coupon {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        padding: 1rem;
+
+        .section_title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: $primary-text;
+        }
+
+        .input_field {
+          display: flex;
+          flex-direction: row;
+          gap: 0.5rem;
+          width: 100%;
+
+          input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ffffff1f;
+            background-color: $secondary-background;
+            color: $primary-text;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            outline: none;
+
+            &:focus {
+              border: 1px solid #ffffff33;
+            }
+          }
+
+          .apply_btn {
+            padding: 1rem 1rem;
+            width: 100%;
+            background-color: transparent;
+            color: $primary-text;
+            border: 1px solid #ffffff38;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            float: right;
+            width: 30%;
+
+            &:hover {
+              background-color: #ffffff;
+              color: #000;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+
+    padding: 0rem;
+    width: 100%;
+    .container {
+      flex-direction: column-reverse;
+      padding: 0rem;
+      width: 100%;
+
+      .left {
+        width: 100%;
+      }
+
+      .right {
+        width: 100%;
+        position: relative;
+        top: 0rem;
+      }
+    }
+
+    
+    
+  }
+}
+
 .toast_alert {
   position: fixed;
 
@@ -3817,6 +4333,7 @@ a {
   gap: 1rem;
   position: relative;
   padding: 1rem;
+  width: 100%;
 
   .uploading_overlay {
     width: 100%;
@@ -4045,6 +4562,16 @@ a {
       }
 
       // style the number input
+    }
+
+    textarea {
+      padding: 1rem;
+      width: 100%;
+      background-color: $secondary-background;
+      border: none;
+      outline: none;
+      border-radius: 0.5rem;
+      color: $primary-text;
     }
 
     .custom-file-input {

@@ -13,7 +13,7 @@ import Login from "./Pages/Login/Login";
 import Checkout from "./Pages/Checkout";
 import { FilterProvider } from "./Context/FilterContext";
 import Profile from "./Pages/Profile";
-import Trade from "./Pages/Trade";
+
 import Printables from "./Pages/Types/Printables";
 import Textures from "./Pages/Types/Textures";
 import Scripts from "./Pages/Types/Scripts";
@@ -27,6 +27,8 @@ import TextureViewer from "./Components/TextureViewer";
 import PasswordReset from "./Pages/Login/PasswordReset";
 import Group from "./Pages/Group";
 import Analytics from "./Pages/Analytics";
+import Trade from "./Pages/Trade";
+import TradePage from "./Pages/Trade";
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -45,7 +47,7 @@ export const AppRoutes = () => (
     <Route path="/Logout" element={<Logout />} />
     <Route path="/Profile/:id" element={<Profile />} />
     <Route path="/" element={<Home />} />
-    <Route path="/Trade" element={<Trade />} />
+    <Route path="/Trade" element={<TradePage />} />
     <Route path="/Cart" element={<Cart />} />
     <Route path="/Hot" element={<Hot />} />
     <Route path="/Models" element={<Models />} />

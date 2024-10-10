@@ -18,7 +18,7 @@ import PageTitle from "../Components/UI/PageTitle";
 import exchange_icon from "../assets/Icons/exchange.png";
 import plus_icon from "../assets/Icons/plus.png";
 
-const Trade = () => {
+const TradePage = () => {
   const { currentUser } = useUser();
   const [items, setItems] = useState([]);
   const [tradeItems, setTradeItems] = useState([]);
@@ -29,16 +29,12 @@ const Trade = () => {
 
   useEffect(() => {
     const fetchItems = async () => {
-      let itemsQuery;
+      if (!currentUser) return;
 
-      if (currentUser) {
-        itemsQuery = query(
-          collection(db, "Assets"),
-          where("userId", "==", currentUser.uid)
-        );
-      } else {
-        return;
-      }
+      const itemsQuery = query(
+        collection(db, "Assets"),
+        where("userId", "==", currentUser.uid)
+      );
 
       const snapshot = await getDocs(itemsQuery);
       const itemsData = snapshot.docs.map((doc) => ({
@@ -53,42 +49,36 @@ const Trade = () => {
 
   useEffect(() => {
     const fetchTradeItems = async () => {
-      try {
-        if (!currentUser) {
-          return;
-        }
+      if (!currentUser) return;
 
-        const itemsQuery = query(
-          collection(db, "Trades"),
-          where("tradingWithUserId", "==", currentUser.uid)
+      const itemsQuery = query(
+        collection(db, "Trades"),
+        where("tradingWithUserId", "==", currentUser.uid)
+      );
+
+      const snapshot = await getDocs(itemsQuery);
+      const itemsData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const assetDetailsPromises = itemsData.map(async (item) => {
+        const ownAssetDoc = await getDoc(doc(db, "Assets", item.ownAssetId));
+        const tradingWithUserAssetDoc = await getDoc(
+          doc(db, "Assets", item.tradingWithUserAssetId)
         );
 
-        const snapshot = await getDocs(itemsQuery);
-        const itemsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        return {
+          ...item,
+          ownAssetDetails: ownAssetDoc.exists() ? ownAssetDoc.data() : null,
+          tradingWithUserAssetDetails: tradingWithUserAssetDoc.exists()
+            ? tradingWithUserAssetDoc.data()
+            : null,
+        };
+      });
 
-        const assetDetailsPromises = itemsData.map(async (item) => {
-          const ownAssetDoc = await getDoc(doc(db, "Assets", item.ownAssetId));
-          const tradingWithUserAssetDoc = await getDoc(
-            doc(db, "Assets", item.tradingWithUserAssetId)
-          );
-
-          return {
-            ...item,
-            ownAssetDetails: ownAssetDoc.exists() ? ownAssetDoc.data() : null,
-            tradingWithUserAssetDetails: tradingWithUserAssetDoc.exists()
-              ? tradingWithUserAssetDoc.data()
-              : null,
-          };
-        });
-
-        const itemsWithAssetDetails = await Promise.all(assetDetailsPromises);
-        setTradeItems(itemsWithAssetDetails);
-      } catch (error) {
-        console.error("Error fetching trade items: ", error);
-      }
+      const itemsWithAssetDetails = await Promise.all(assetDetailsPromises);
+      setTradeItems(itemsWithAssetDetails);
     };
 
     fetchTradeItems();
@@ -128,6 +118,7 @@ const Trade = () => {
     try {
       await setDoc(tradeRef, tradeData);
       console.log("Trade successfully placed");
+      alert("Trade successfully placed");
     } catch (error) {
       console.error("Error placing trade: ", error);
     }
@@ -143,10 +134,6 @@ const Trade = () => {
 
       const trade = await getDoc(tradeRef);
       const tradeData = trade.data();
-
-      const assetRef = doc(db, "Assets", tradeData.ownAssetId);
-      const assetDoc = await getDoc(assetRef);
-      const assetData = assetDoc.data();
 
       const userRef = doc(db, "Profiles", tradeData.tradingWithUserId);
       const myUserRef = doc(db, "Profiles", tradeData.ownUserId);
@@ -188,247 +175,242 @@ const Trade = () => {
   };
 
   return (
-    <>
-      <div className="page_content">
-        <div className="trade_main">
-          <div className="title">
-            <PageTitle title="Trade" />
-            <button
-              className="toggle_requests"
-              onClick={() => setIsTradeRequestsOpen((prev) => !prev)}
-            >
-              <i className="icon fa-solid fa-exchange"></i> Trade Requests
-            </button>
-          </div>
-          {isTradeRequestsOpen && (
-            <div className="my_trades">
-              <div className="title">
-                <h2>Trade requests</h2>
-              </div>
+    <div className="page_content">
+      <div className="trade_main">
+        <div className="title">
+          <PageTitle title="Trade" />
+          <button
+            className="toggle_requests"
+            onClick={() => setIsTradeRequestsOpen((prev) => !prev)}
+          >
+            <i className="icon fa-solid fa-exchange"></i> Trade Requests
+          </button>
+        </div>
+        {isTradeRequestsOpen && (
+          <div className="my_trades">
+            <div className="title">
+              <h2>Trade requests</h2>
+            </div>
 
-              <div className="items">
-                {tradeItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`trade_item_card ${
-                      item.status === "accepted" && "accepted"
-                    }`}
-                  >
-                    <div className="left">
-                      <div className="card_image">
-                        <img
-                          src={item.ownAssetDetails?.thumbnail}
-                          alt={item.ownAssetDetails?.title}
-                        />
-                      </div>
-                      <div className="card_details">
-                        <h3 className="card_title">
-                          {item.ownAssetDetails?.title}
-                        </h3>
-                        <span className="type">
-                          {item.ownAssetDetails?.type}
-                        </span>
-                        <span className="price">
-                          $
-                          {(
-                            item.ownAssetDetails?.price -
-                            (item.ownAssetDetails?.price *
-                              item.ownAssetDetails?.discount) /
-                              100
-                          ).toFixed(2)}
-                        </span>
-                      </div>
+            <div className="items">
+              {tradeItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`trade_item_card ${
+                    item.status === "accepted" && "accepted"
+                  }`}
+                >
+                  <div className="left">
+                    <div className="card_image">
+                      <img
+                        src={item.ownAssetDetails?.thumbnail}
+                        alt={item.ownAssetDetails?.title}
+                      />
                     </div>
-
-                    <div className="trade_icon">
-                      <img src={exchange_icon} alt="Trade" />
+                    <div className="card_details">
+                      <h3 className="card_title">
+                        {item.ownAssetDetails?.title}
+                      </h3>
+                      <span className="type">{item.ownAssetDetails?.type}</span>
+                      <span className="price">
+                        $
+                        {(
+                          item.ownAssetDetails?.price -
+                          (item.ownAssetDetails?.price *
+                            item.ownAssetDetails?.discount) /
+                            100
+                        ).toFixed(2)}
+                      </span>
                     </div>
-
-                    <div className="right">
-                      <div className="card_image">
-                        <img
-                          src={item.tradingWithUserAssetDetails?.thumbnail}
-                          alt={item.tradingWithUserAssetDetails?.title}
-                        />
-                      </div>
-                      <div className="card_details">
-                        <h3 className="card_title">
-                          {item.tradingWithUserAssetDetails?.title}
-                        </h3>
-                        <span className="type">
-                          {item.tradingWithUserAssetDetails?.type}
-                        </span>
-                        <span className="price">
-                          $
-                          {(
-                            item.tradingWithUserAssetDetails?.price -
-                            (item.tradingWithUserAssetDetails?.price *
-                              item.tradingWithUserAssetDetails?.discount) /
-                              100
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {item.status !== "accepted" && (
-                      <div className="buttons">
-                        <button
-                          className="button reject_trade"
-                          onClick={() => rejectTrade(item.id)}
-                        >
-                          <i className="icon fa-solid fa-times"></i>
-                        </button>
-
-                        <button
-                          className="button accept_trade"
-                          onClick={() => acceptTrade(item.id)}
-                        >
-                          <i className="icon fa-solid fa-check"></i>
-                        </button>
-                      </div>
-                    )}
                   </div>
-                ))}
+
+                  <div className="trade_icon">
+                    <img src={exchange_icon} alt="Trade" />
+                  </div>
+
+                  <div className="right">
+                    <div className="card_image">
+                      <img
+                        src={item.tradingWithUserAssetDetails?.thumbnail}
+                        alt={item.tradingWithUserAssetDetails?.title}
+                      />
+                    </div>
+                    <div className="card_details">
+                      <h3 className="card_title">
+                        {item.tradingWithUserAssetDetails?.title}
+                      </h3>
+                      <span className="type">
+                        {item.tradingWithUserAssetDetails?.type}
+                      </span>
+                      <span className="price">
+                        $
+                        {(
+                          item.tradingWithUserAssetDetails?.price -
+                          (item.tradingWithUserAssetDetails?.price *
+                            item.tradingWithUserAssetDetails?.discount) /
+                            100
+                        ).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {item.status !== "accepted" && (
+                    <div className="buttons">
+                      <button
+                        className="button reject_trade"
+                        onClick={() => rejectTrade(item.id)}
+                      >
+                        <i className="icon fa-solid fa-times"></i>
+                      </button>
+
+                      <button
+                        className="button accept_trade"
+                        onClick={() => acceptTrade(item.id)}
+                      >
+                        <i className="icon fa-solid fa-check"></i>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="trade_frame">
+          <div className="top">
+            <div className="trading_for_item">
+              <div className="trading_for_item_container">
+                {item && (
+                  <div className="trading_for_item_card">
+                    <div className="card_image">
+                      <img src={item.thumbnail} alt={item.title} />
+                    </div>
+
+                    <div className="card_details">
+                      <h3 className="title">{item.title}</h3>
+
+                      <p className="price">
+                        {(
+                          item.price -
+                          (item.price * item.discount) / 100
+                        ).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
-          <div className="trade_frame">
-            <div className="top">
-              <div className="trading_for_item">
-                <div className="trading_for_item_container">
-                  {item && (
-                    <div className="trading_for_item_card">
+
+            <div className="trade_icon">
+              <img src={exchange_icon} alt="Trade" />
+            </div>
+
+            <div className="my_trade_item">
+              <div className="my_trade_item_container">
+                {tradeItemSelectedId &&
+                  items.filter((item) => item.id === tradeItemSelectedId)
+                    .length > 0 && (
+                    <div className="my_trade_item_card">
                       <div className="card_image">
-                        <img src={item.thumbnail} alt={item.title} />
+                        <img
+                          src={
+                            items.find(
+                              (item) => item.id === tradeItemSelectedId
+                            )?.thumbnail
+                          }
+                          alt={
+                            items.find(
+                              (item) => item.id === tradeItemSelectedId
+                            )?.title
+                          }
+                        />
                       </div>
 
                       <div className="card_details">
-                        <h3 className="title">{item.title}</h3>
+                        <h3 className="title">
+                          {
+                            items.find(
+                              (item) => item.id === tradeItemSelectedId
+                            )?.title
+                          }
+                        </h3>
 
                         <p className="price">
                           {(
-                            item.price -
-                            (item.price * item.discount) / 100
+                            items.find(
+                              (item) => item.id === tradeItemSelectedId
+                            )?.price -
+                            (items.find(
+                              (item) => item.id === tradeItemSelectedId
+                            )?.price *
+                              items.find(
+                                (item) => item.id === tradeItemSelectedId
+                              )?.discount) /
+                              100
                           ).toFixed(2)}
                         </p>
                       </div>
                     </div>
                   )}
-                </div>
               </div>
-
-              <div className="trade_icon">
-                <img src={exchange_icon} alt="Trade" />
-              </div>
-
-              <div className="my_trade_item">
-                <div className="my_trade_item_container">
-                  {tradeItemSelectedId &&
-                    items.filter((item) => item.id === tradeItemSelectedId)
-                      .length > 0 && (
-                      <div className="my_trade_item_card">
-                        <div className="card_image">
-                          <img
-                            src={
-                              items.find(
-                                (item) => item.id === tradeItemSelectedId
-                              )?.thumbnail
-                            }
-                            alt={
-                              items.find(
-                                (item) => item.id === tradeItemSelectedId
-                              )?.title
-                            }
-                          />
-                        </div>
-
-                        <div className="card_details">
-                          <h3 className="title">
-                            {
-                              items.find(
-                                (item) => item.id === tradeItemSelectedId
-                              )?.title
-                            }
-                          </h3>
-
-                          <p className="price">
-                            {(
-                              items.find(
-                                (item) => item.id === tradeItemSelectedId
-                              )?.price -
-                              (items.find(
-                                (item) => item.id === tradeItemSelectedId
-                              )?.price *
-                                items.find(
-                                  (item) => item.id === tradeItemSelectedId
-                                )?.discount) /
-                                100
-                            ).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </div>
-
-            <div className="bottom">
-              <button className="trade_button" onClick={placeTrade}>
-                Trade
-              </button>
             </div>
           </div>
 
-          <div className="trade_options">
-            <div className="title">
-              <h1>Your Items</h1>
-            </div>
-            {items.filter((item) => item.id !== tradeItemSelectedId).length ===
-              0 && (
-              <div className="no_items">
-                <h1>No items available</h1>
-              </div>
-            )}
-            {items
-              .filter(
-                (item) =>
-                  item.price - (item.price * item.discount) / 100 > 0 &&
-                  item.id !== tradeItemSelectedId
-              )
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="trade_option_card"
-                  onClick={() => setTradeItemSelectedId(item.id)}
-                >
-                  <div className="card_image">
-                    <img src={item.thumbnail} alt={item.title} />
-                  </div>
-
-                  <div className="card_details">
-                    <h3 className="title">{item.title}</h3>
-
-                    <p className="price">
-                      {(
-                        item.price -
-                        (item.price * item.discount) / 100
-                      ).toFixed(2)}
-                    </p>
-                  </div>
-
-                  <button
-                    className="add_to_trade"
-                    onClick={() => setTradeItemSelectedId(item.id)}
-                  >
-                    <img src={plus_icon} alt="Add" />
-                  </button>
-                </div>
-              ))}
+          <div className="bottom">
+            <button className="trade_button" onClick={placeTrade}>
+              Trade
+            </button>
           </div>
         </div>
+
+        <div className="trade_options">
+          <div className="title">
+            <h1>Your Items</h1>
+          </div>
+          {items.filter((item) => item.id !== tradeItemSelectedId).length ===
+            0 && (
+            <div className="no_items">
+              <h1>No items available</h1>
+            </div>
+          )}
+          {items
+            .filter(
+              (item) =>
+                item.price - (item.price * item.discount) / 100 > 0 &&
+                item.id !== tradeItemSelectedId
+            )
+            .map((item) => (
+              <div
+                key={item.id}
+                className="trade_option_card"
+                onClick={() => setTradeItemSelectedId(item.id)}
+              >
+                <div className="card_image">
+                  <img src={item.thumbnail} alt={item.title} />
+                </div>
+
+                <div className="card_details">
+                  <h3 className="title">{item.title}</h3>
+
+                  <p className="price">
+                    {(item.price - (item.price * item.discount) / 100).toFixed(
+                      2
+                    )}
+                  </p>
+                </div>
+
+                <button
+                  className="add_to_trade"
+                  onClick={() => setTradeItemSelectedId(item.id)}
+                >
+                  <img src={plus_icon} alt="Add" />
+                </button>
+              </div>
+            ))}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default Trade;
+export default TradePage;

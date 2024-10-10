@@ -13,13 +13,16 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass";
 import hdri from "../assets/Models/illovo_beach_balcony_4k.hdr";
+import model_bg from "../assets/Images/Sections/model_bg.jpg";
 
 const ModelViewer = (props) => {
-  const [shadow, setShadow] = useState(1);
-  const [exposure, setExposure] = useState(5);
+  const [shadow, setShadow] = useState(2);
+  const [exposure, setExposure] = useState(7);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const mountRef = useRef(null);
+  const [isWireframeOn, setIsWireframeOn] = useState(false);
 
   let renderer,
     camera,
@@ -31,8 +34,8 @@ const ModelViewer = (props) => {
   const [autoRotate, setAutoRotate] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     scene = new THREE.Scene();
-    scene.background = null; // Ensure background is transparent
 
     camera = new THREE.PerspectiveCamera(
       75,
@@ -56,7 +59,7 @@ const ModelViewer = (props) => {
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.3, // Strength
+      0.2, // Strength
       0.4, // Radius
       0.85 // Threshold
     );
@@ -65,7 +68,7 @@ const ModelViewer = (props) => {
     const bokehPass = new BokehPass(scene, camera, {
       focus: 1,
       aperture: 0.025,
-      maxblur: 0.001,
+      maxblur: 0.00001,
       width: window.innerWidth,
       height: window.innerHeight,
     });
@@ -99,11 +102,14 @@ const ModelViewer = (props) => {
     controls.enableDamping = true;
 
     ambientLight = new THREE.AmbientLight(0xffffff, exposure);
+
+    // set ambient light intensity
+
     scene.add(ambientLight);
 
     directionalLight = new THREE.DirectionalLight(0xffffff, shadow);
     directionalLight.position.set(5, 5, 5);
-    directionalLight.intensity = 1;
+    directionalLight.intensity = 2;
     directionalLight.shadow.bias = -0.0001; // Adjust shadow bias
     directionalLight.shadow.mapSize.width = 2048; // Increase shadow resolution
     directionalLight.shadow.mapSize.height = 2048;
@@ -114,6 +120,13 @@ const ModelViewer = (props) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       scene.environment = texture;
       // scene.background = texture; // Optional: set the background to the HDRI
+    });
+
+    // Load background image as texture
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(model_bg, (texture) => {
+      texture.repeat.set(2, 2); // Adjust the scale as needed
+      scene.background = texture;
     });
 
     const loadModel = (url) => {
@@ -134,10 +147,17 @@ const ModelViewer = (props) => {
                 node.material.needsUpdate = true; // Ensure material updates
                 node.castShadow = true; // Enable shadows for the model
                 node.receiveShadow = true; // Enable shadows for the model
+                if (isWireframeOn) {
+                  node.material = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    wireframe: true,
+                  }); // Set wireframe color to white
+                }
               }
             });
             scene.add(model);
             centerModel(model);
+            setIsLoading(false);
           });
           break;
         case "obj":
@@ -149,23 +169,32 @@ const ModelViewer = (props) => {
                 node.material.needsUpdate = true; // Ensure material updates
                 node.castShadow = true; // Enable shadows for the model
                 node.receiveShadow = true; // Enable shadows for the model
+                if (isWireframeOn) {
+                  node.material = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    wireframe: true,
+                  }); // Set wireframe color to white
+                }
               }
             });
             scene.add(obj);
             centerModel(obj);
+            setIsLoading(false);
           });
           break;
         case "stl":
           loader = new STLLoader();
           loader.load(url, (geometry) => {
-            const material = new THREE.MeshStandardMaterial({
-              envMap: scene.environment, // Apply environment map to material
+            const material = new THREE.MeshBasicMaterial({
+              color: 0xffffff,
+              wireframe: isWireframeOn, // Enable wireframe mode if isWireframeOn is true
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true; // Enable shadows for the model
             mesh.receiveShadow = true; // Enable shadows for the model
             scene.add(mesh);
             centerModel(mesh);
+            setIsLoading(false);
           });
           break;
         default:
@@ -234,7 +263,7 @@ const ModelViewer = (props) => {
       camera = null;
       renderer = null;
     };
-  }, [props.model]);
+  }, [props.model, isWireframeOn]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -271,7 +300,8 @@ const ModelViewer = (props) => {
       >
         <i className="fas fa-expand"></i>
       </button>
-      {/* <div className="controls">
+
+      <div className="controls">
         <div className="play_pause">
           <button
             onClick={() => {
@@ -286,6 +316,15 @@ const ModelViewer = (props) => {
             )}
           </button>
         </div>
+
+        <button
+          className="wireframe_btn"
+          onClick={() => {
+            setIsWireframeOn(!isWireframeOn);
+          }}
+        >
+          <i className="fas fa-cube"></i>
+        </button>
 
         <div className="colors">
           <span
@@ -340,15 +379,16 @@ const ModelViewer = (props) => {
             onChange={(e) => setExposure(parseFloat(e.target.value))}
           />
         </div>
-      </div> */}
+      </div>
 
-      <div
-        className="model_viewer"
-        ref={mountRef}
-        style={{
-          backgroundColor: "black",
-        }}
-      ></div>
+      <div className="model_viewer" ref={mountRef}>
+        {isLoading && (
+          <div className="loading">
+            <div className="spinner"></div>
+            <span>Loading Model</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

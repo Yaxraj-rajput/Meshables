@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import { db } from "../../firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { storage } from "../../firebase";
-import { Editor } from "@tinymce/tinymce-react";
-import "../assets/Styles/custom-dark-theme.css";
-
 import PageTitle from "../Components/UI/PageTitle";
 import {
   ref,
@@ -339,54 +336,14 @@ const Upload = () => {
                     placeholder="Title"
                     required
                   />
+                </div>
 
-                  {/* <input
+                <div className="right">
+                  <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Description"
-                  /> */}
-                </div>
-
-                <div className="right">
-                  <Editor
-                    apiKey="nchicumv6ku512vmpjczg687lxqlhq8232rb3cp41d7v26f1"
-                    value={formData.description}
-                    onEditorChange={(content) =>
-                      setFormData({ ...formData, description: content })
-                    }
-                    init={{
-                      plugins: [
-                        "advlist autolink lists link image charmap print preview anchor",
-                        "searchreplace visualblocks code fullscreen",
-                        "insertdatetime media table paste code help wordcount",
-                      ],
-                      toolbar:
-                        "bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat",
-                      menubar: false,
-                      skin: "oxide-dark",
-                      content_style: `
-                        body {
-                          background-color: #181818; /* Dark grey background */
-                          color: #d3d3d3; /* Light grey text */
-                        }
-                        .mce-content-body {
-                          background-color: #181818; /* Dark grey background */
-                          color: #d3d3d3; /* Light grey text */
-                        }
-                        .mce-toolbar, .mce-menubar {
-                          background-color: #111111; /* Slightly lighter grey for toolbar and menubar */
-                        }
-                        .mce-btn {
-                          background-color: #4a4a4a; /* Button background */
-                          color: #d3d3d3; /* Button text */
-                        }
-                        .mce-btn:hover {
-                          background-color: #5a5a5a; /* Button hover background */
-                        }
-                      `,
-                    }}
-                    initialValue="Description"
                   />
                   <select name="type" onChange={handleChange} required>
                     <option value="" disabled selected>
@@ -655,7 +612,7 @@ const Upload = () => {
                         id="fileInput"
                         type="file"
                         // supported formats
-                        accept=".glb,.gltf"
+                        accept=".glb,.gltf,.stl,.obj,.fbx,.blend"
                         onChange={(e) => {
                           setFormData({
                             ...formData,
