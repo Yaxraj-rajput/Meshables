@@ -4,21 +4,25 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAKRq8dGR5K0fC339xcUWFrk_9KmqED8YQ",
-  authDomain: "meshables-8dfc2.firebaseapp.com",
-  projectId: "meshables-8dfc2",
-  storageBucket: "meshables-8dfc2.appspot.com",
-  messagingSenderId: "527308042901",
-  appId: "1:527308042901:web:3de52a4d84fb921969e19c",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
 // Initialize Firebase
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 export { db };
+
+const functions = getFunctions(app);
+
+export { functions };
 
 const auth = getAuth();
 export { auth };

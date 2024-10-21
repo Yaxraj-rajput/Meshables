@@ -29,6 +29,8 @@ import Group from "./Pages/Group";
 import Analytics from "./Pages/Analytics";
 import Trade from "./Pages/Trade";
 import TradePage from "./Pages/Trade";
+import Terms from "./Pages/Terms";
+import Privacy from "./Pages/Privacy";
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -65,6 +67,8 @@ export const AppRoutes = () => (
     <Route path="/Texture" element={<TextureViewer />} />
     <Route path="/Discord" element={<Discord />} />
     <Route path="/analytics" element={<Analytics />} />
+    <Route path="/Terms" element={<Terms />} />
+    <Route path="/Privacy" element={<Privacy />} />
   </Routes>
 );
 

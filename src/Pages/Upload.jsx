@@ -13,6 +13,7 @@ import {
 import { useUser } from "../Context/UserProvider";
 import { Helmet } from "react-helmet";
 import plus_icon from "../assets/Icons/plus.png";
+import DescriptionBox from "../Components/DescriptionBox";
 
 const Upload = () => {
   const { currentUser } = useUser();
@@ -216,6 +217,14 @@ const Upload = () => {
         };
       }
 
+      if (formData.type === "hdris") {
+        docData = {
+          ...docData,
+          hdri: await uploadFile(formData.hdri),
+          hdriSize: formData.hdriSize,
+        };
+      }
+
       if (formData.type === "printables") {
         docData = {
           ...docData,
@@ -339,11 +348,9 @@ const Upload = () => {
                 </div>
 
                 <div className="right">
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Description"
+                  <DescriptionBox
+                    description={formData.description}
+                    handleChange={handleChange}
                   />
                   <select name="type" onChange={handleChange} required>
                     <option value="" disabled selected>
@@ -840,6 +847,28 @@ const Upload = () => {
                       )}
                     </>
                   )}{" "}
+                  {formData.type === "hdris" && (
+                    <>
+                      <input
+                        name="hdri"
+                        id="fileInput"
+                        type="file"
+                        accept=".hdr"
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            hdri: e.target.files[0],
+                            hdriSize: e.target.files[0].size,
+                          });
+                        }}
+                        required
+                      />
+
+                      <label for="fileInput" className="custom-file-input">
+                        Choose HDRI File
+                      </label>
+                    </>
+                  )}
                   {formData.type === "scripts" ? (
                     <>
                       <input

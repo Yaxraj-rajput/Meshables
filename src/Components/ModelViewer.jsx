@@ -1,19 +1,17 @@
-import React, { useEffect, useRef } from "react";
-import { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
-import { VRButton } from "three/examples/jsm/webxr/VRButton";
 import { ARButton } from "three/examples/jsm/webxr/ARButton";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass";
 import hdri from "../assets/Models/illovo_beach_balcony_4k.hdr";
-import model_bg from "../assets/Images/Sections/model_bg.jpg";
+import model_bg from "../assets/Images/Sections/model_bg.png";
 
 const ModelViewer = (props) => {
   const [shadow, setShadow] = useState(2);
@@ -76,21 +74,13 @@ const ModelViewer = (props) => {
 
     if (mountRef.current) {
       mountRef.current.appendChild(renderer.domElement);
-      // Add VR/AR button if supported
+      // Add AR button if supported
       if ("xr" in navigator) {
-        navigator.xr.isSessionSupported("immersive-vr").then((supported) => {
+        navigator.xr.isSessionSupported("immersive-ar").then((supported) => {
           if (supported) {
-            document.body.appendChild(VRButton.createButton(renderer));
+            document.body.appendChild(ARButton.createButton(renderer));
           } else {
-            navigator.xr
-              .isSessionSupported("immersive-ar")
-              .then((supported) => {
-                if (supported) {
-                  document.body.appendChild(ARButton.createButton(renderer));
-                } else {
-                  console.error("WebXR not supported");
-                }
-              });
+            console.error("WebXR not supported");
           }
         });
       } else {

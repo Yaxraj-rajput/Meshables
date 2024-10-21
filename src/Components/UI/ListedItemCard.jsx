@@ -31,7 +31,7 @@ const ListedItemCard = ({ id, data, rating }) => {
               <strong>
                 {data.price - (data.price * data.discount) / 100 === 0
                   ? "Free"
-                  : `$${(
+                  : `₹${(
                       data.price -
                       (data.price * data.discount) / 100
                     ).toFixed(2)}`}

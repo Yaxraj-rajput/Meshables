@@ -1,10 +1,16 @@
 import React from "react";
 import { useState } from "react";
 import { useCallback } from "react";
-
+import { ethers } from "ethers";
 import { Link } from "react-router-dom";
-
+import CheckoutForm from "../Components/CheckoutForm";
+import { useUser } from "../Context/UserProvider";
+import { parseEther } from "ethers";
+import { db } from "../../firebase";
 const Checkout = () => {
+  const { currentUser } = useUser();
+  const [formData, setFormData] = useState("");
+
   const [cardType, setCardType] = useState("");
 
   const [cartItems, setCartItems] = useState(() => {
@@ -22,6 +28,80 @@ const Checkout = () => {
       )
       .toFixed(2);
   }, [cartItems]);
+
+  const payWithCrypto = async () => {
+    if (!window.ethereum) {
+      alert(
+        "No Ethereum wallet detected. Please install an Ethereum wallet to proceed."
+      );
+      return;
+    }
+
+    try {
+      console.log("Requesting account access...");
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      console.log("Account access granted.");
+
+      // Initialize ethers provider
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Fetch current exchange rate (INR to ETH) - replace with real-time fetch
+      const ethToInrRate = 120000; // Example: 1 ETH = 1,20,000 INR (you would fetch this in real-time)
+
+      // Calculate total in INR
+      const totalInInr = (calculateTotal() * 1.03).toFixed(2);
+      console.log("Total in INR:", totalInInr);
+
+      // Convert INR to ETH
+      const totalInEth = (totalInInr / ethToInrRate).toFixed(6);
+      console.log("Total in ETH:", totalInEth);
+
+      // Define the transaction parameters
+      const transactionParameters = {
+        to: "0x3349CfAcd34b41D2Db7Cc88B9038aD0c5f9D6888", // Recipient address
+        value: ethers.parseEther(totalInEth.toString()), // Amount to send (in wei)
+        gasLimit: 21000, // Set the gas limit directly as a number
+      };
+
+      console.log("Transaction parameters defined:", transactionParameters);
+
+      // Send the transaction
+      const tx = await signer.sendTransaction(transactionParameters);
+      console.log("Transaction sent:", tx);
+
+      // Wait for the transaction to be mined
+      const receipt = await tx.wait();
+      console.log("Transaction mined:", receipt);
+
+      // add the purchased items in owneditems in firebase
+
+      const userRef = db.collection("users").doc(currentUser.uid);
+
+      const userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        const userOwnedItems = userDoc.data().ownedItems;
+
+        const updatedOwnedItems = [...userOwnedItems, ...cartItems];
+
+        await userRef.update({
+          ownedItems: updatedOwnedItems,
+        });
+
+        // if successful, clear the cart
+
+        localStorage.removeItem("cart");
+
+        setCartItems([]);
+      }
+
+      alert("Payment successful!");
+    } catch (error) {
+      console.error("Payment failed:", error);
+      alert("Payment failed. Please try again.");
+    }
+  };
 
   return (
     <div className="page_content">
@@ -241,7 +321,7 @@ const Checkout = () => {
                     <div className="item_details">
                       <div className="item_title">{item.title}</div>
                       <div className="price">
-                        $
+                        ₹
                         {(
                           item.price -
                           (item.price * item.discount) / 100
@@ -259,26 +339,26 @@ const Checkout = () => {
 
                 <div className="item">
                   <span className="label">Subtotal</span>
-                  <span className="value">${calculateTotal()}</span>
+                  <span className="value">₹{calculateTotal()}</span>
                 </div>
 
                 <div className="item">
                   <span className="label">Taxes & Fees</span>
                   <span className="value">
-                    ${(calculateTotal() * 0.03).toFixed(2)}
+                    ₹{(calculateTotal() * 0.03).toFixed(2)}
                   </span>
                 </div>
 
                 <div className="item">
                   <span className="label">Total</span>
                   <span className="value">
-                    ${(calculateTotal() * 1.03).toFixed(2)}
+                    ₹{(calculateTotal() * 1.03).toFixed(2)}
                   </span>
                 </div>
 
                 <div className="total_payable">
                   <span>Total Payable</span>
-                  <span>${(calculateTotal() * 1.03).toFixed(2)}</span>
+                  <span>₹{(calculateTotal() * 1.03).toFixed(2)}</span>
                 </div>
               </div>
 
@@ -289,6 +369,16 @@ const Checkout = () => {
                   <button className="apply_btn">Apply</button>
                 </div>
               </div>
+
+              <button className="pay_with_crypto" onClick={payWithCrypto}>
+                Pay with Crypto
+              </button>
+
+              <CheckoutForm
+                amount={(calculateTotal() * 1.03).toFixed(2) * 100}
+                prefill_name={currentUser ? currentUser.displayName : ""}
+                prefill_email={currentUser ? currentUser.email : ""}
+              />
             </div>
           </div>
         </div>

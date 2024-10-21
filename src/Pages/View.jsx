@@ -16,15 +16,17 @@ import {
 import ModelViewer from "../Components/ModelViewer";
 import UserCard from "../Components/UI/UserCard";
 import ToastAlert from "../Components/UI/ToastAlert";
-import TradeButton from "../Components/UI/TradeButton";
-import Trade from "./Trade";
 import { useNavigate } from "react-router-dom";
 import ViewItemImages from "../Components/ViewItemImages";
 import { Helmet } from "react-helmet";
 import { useUser } from "../Context/UserProvider";
-
+import ReactMarkdown from "react-markdown";
 import "@google/model-viewer";
 import ScriptViewer from "../Components/ScriptViewer";
+import HdriViewer from "../Components/HdriViewer";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 
 const View = () => {
   const { currentUser, userProfile } = useUser();
@@ -37,6 +39,36 @@ const View = () => {
   const navigate = useNavigate();
   const [isItemOwned, setIsItemOwned] = useState(false);
   const [group, setGroup] = useState(null); // Define group state
+  const [markdown, setMarkdown] = useState("");
+
+  const renderers = {
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || "");
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={materialDark}
+          language={match[1]}
+          PreTag="div"
+          {...props}
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+    image({ node, ...props }) {
+      return (
+        <img
+          style={{ maxWidth: "100%", height: "auto" }}
+          alt={props.alt}
+          {...props}
+        />
+      );
+    },
+  };
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -45,6 +77,8 @@ const View = () => {
 
       if (itemDocSnap.exists()) {
         setItem({ id: itemDocSnap.id, ...itemDocSnap.data() });
+        setMarkdown(itemDocSnap.data().description);
+
         setIs3d(itemDocSnap.data().is3d);
       } else {
         console.log("No such document!");
@@ -166,102 +200,114 @@ const View = () => {
                     id={item.id}
                     price={item.price - (item.price * item.discount) / 100}
                   />
+                ) : item.type === "hdris" ? (
+                  <>
+                    <HdriViewer hdri={item.hdri} />
+                  </>
                 ) : (
                   <img src={item.thumbnail} alt={item.title} />
                 )}
-
                 <div className="asset_details">
                   <h2 className="title">Details</h2>
 
-                  <div className="details">
-                    <div className="detail">
-                      <div className="title">
-                        <i className="icon fas fa-cube"></i> Physical Size
+                  {item.type === "models" && (
+                    <>
+                      <div className="details">
+                        <div className="detail">
+                          <div className="title">
+                            <i className="icon fas fa-cube"></i> Physical Size
+                          </div>
+                          <div className="item">
+                            <span className="label">Height</span>
+                            <span className="value">1.2m</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Width</span>
+                            <span className="value">1.5m</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Depth</span>
+                            <span className="value">1m</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="item">
-                        <span className="label">Height</span>
-                        <span className="value">1.2m</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Width</span>
-                        <span className="value">1.5m</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Depth</span>
-                        <span className="value">1m</span>
-                      </div>
-                    </div>
-                  </div>
+                      <div className="details">
+                        <div className="detail">
+                          <div className="title">
+                            <i className="icon fa-solid fa-layer-group"></i>{" "}
+                            LODs
+                          </div>
+                          <div className="item">
+                            <span className="label">SOURCE</span>
+                            <span className="value">116,066 Polygons</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">LOD 0</span>
+                            <span className="value">116,066 Polygons</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">LOD 1</span>
+                            <span className="value">57,580 Polygons</span>
+                          </div>
 
-                  <div className="details">
-                    <div className="detail">
-                      <div className="title">
-                        <i className="icon fa-solid fa-layer-group"></i> LODs
-                      </div>
-                      <div className="item">
-                        <span className="label">SOURCE</span>
-                        <span className="value">116,066 Polygons</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">LOD 0</span>
-                        <span className="value">116,066 Polygons</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">LOD 1</span>
-                        <span className="value">57,580 Polygons</span>
-                      </div>
+                          <div className="item">
+                            <span className="label">LOD 2</span>
+                            <span className="value">30,778 Polygons</span>
+                          </div>
 
-                      <div className="item">
-                        <span className="label">LOD 2</span>
-                        <span className="value">30,778 Polygons</span>
-                      </div>
+                          <div className="item">
+                            <span className="label">LOD 3</span>
+                            <span className="value">15,389 Polygons</span>
+                          </div>
 
-                      <div className="item">
-                        <span className="label">LOD 3</span>
-                        <span className="value">15,389 Polygons</span>
+                          <div className="item">
+                            <span className="label">LOD 4</span>
+                            <span className="value">7,695 Polygons</span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="item">
-                        <span className="label">LOD 4</span>
-                        <span className="value">7,695 Polygons</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="details">
-                    <div className="detail">
-                      <div className="title">
-                        <i className="icon fa-solid fa-image"></i> Texture Files
-                        & Formats
-                      </div>
-                      <div className="item">
-                        <span className="label">Ambient Occlusion</span>
-                        <span className="value">PNG</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Normal</span>
-                        <span className="value">PNG</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Roughness</span>
-                        <span className="value">PNG</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Metallic</span>
-                        <span className="value">PNG</span>
-                      </div>
-                      <div className="item">
-                        <span className="label">Diffuse</span>
-                        <span className="value">PNG</span>
-                      </div>
-                    </div>
-                  </div>
+                      <div className="details">
+                        <div className="detail">
+                          <div className="title">
+                            <i className="icon fa-solid fa-image"></i> Texture
+                            Files & Formats
+                          </div>
+                          <div className="item">
+                            <span className="label">Ambient Occlusion</span>
+                            <span className="value">PNG</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Normal</span>
+                            <span className="value">PNG</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Roughness</span>
+                            <span className="value">PNG</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Metallic</span>
+                            <span className="value">PNG</span>
+                          </div>
+                          <div className="item">
+                            <span className="label">Diffuse</span>
+                            <span className="value">PNG</span>
+                          </div>
+                        </div>
+                      </div>{" "}
+                    </>
+                  )}
 
                   <div className="description">
-                    <h2 className="title">Description</h2>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: item.description }}
-                    />
+                    {/* <h2 className="title">Description</h2> */}
+                    <div className="content" />
+                    <div className="markdown-preview">
+                      <ReactMarkdown
+                        components={renderers}
+                        remarkPlugins={[remarkGfm]}
+                      >
+                        {markdown}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -302,13 +348,13 @@ const View = () => {
                     <span className="price_value">
                       {item.price - (item.price * item.discount) / 100 == 0
                         ? "Free"
-                        : `$${(
+                        : `₹${(
                             item.price -
                             (item.price * item.discount) / 100
                           ).toFixed(2)}`}
                     </span>
                     <span className="before_price">
-                      {item.discount && `$${item.price}`}
+                      {item.discount && `₹${item.price}`}
                     </span>
 
                     {item.discount && (
@@ -325,7 +371,6 @@ const View = () => {
                           0
                         ) {
                           window.open(item.model, "_blank");
-
                           return;
                         } else if (
                           userProfile &&
@@ -491,7 +536,25 @@ const View = () => {
                           { label: "Script name", value: item.scriptName },
                           {
                             label: "Script Size",
-                            value: (item.scriptSize / 1024).toFixed(2) + " KB",
+                            value:
+                              (item.scriptSize / 1024 / 1024).toFixed(2) +
+                              " KB",
+                          },
+                        ]
+                      : item.type === "hdris"
+                      ? [
+                          {
+                            label: "File Format",
+                            value: item.hdri
+                              .split(".")
+                              .pop()
+                              .toUpperCase()
+                              .split("?")[0],
+                          },
+                          {
+                            label: "File Size",
+                            value:
+                              (item.hdriSize / 1024 / 1024).toFixed(2) + " MB", // Convert to KB
                           },
                         ]
                       : []

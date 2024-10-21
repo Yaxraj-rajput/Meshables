@@ -82,7 +82,7 @@ const Cart = () => {
                       <div className="item_details">
                         <div className="item_title">{item.title}</div>
                         <div className="price">
-                          $
+                          ₹
                           {(
                             item.price -
                             (item.price * item.discount) / 100
@@ -101,7 +101,7 @@ const Cart = () => {
                 ))}
               </div>
               <div className="total">
-                Total: <span className="value">${calculateTotal()}</span>
+                Total: <span className="value">₹{calculateTotal()}</span>
               </div>
 
               <div className="checkout">

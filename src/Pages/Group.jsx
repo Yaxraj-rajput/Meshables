@@ -299,7 +299,7 @@ const Group = () => {
 
                       {request.users.find(
                         (user) => user.email === currentUser.email
-                      ).role === "owner" && (
+                      ) && (
                         <button
                           onClick={async () => {
                             await acceptTrade(request.id, currentUser.email);
